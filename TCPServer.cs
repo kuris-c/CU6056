@@ -89,7 +89,7 @@ public class TCPServer : MonoBehaviour
                 if (_command.Equals("Default Message"))
                 {
                     UnityMainThreadDispatcher.Instance().Enqueue(() => ChatHistory.Instance.DisplayMessage(true, _username, GetInitials(_username), _data));
-                    BroadcastMessage(_foundClient);
+                    BroadcastMessage(_foundClient, _receivedMessage);
                 }
                 
                 if (_command.Equals("Reply Message"))
@@ -97,7 +97,7 @@ public class TCPServer : MonoBehaviour
                     string _reply = _messageParts[2];
 
                     UnityMainThreadDispatcher.Instance().Enqueue(() => ChatHistory.Instance.DisplayMessage(true, _username, GetInitials(_username), _data, _reply));
-                    BroadcastMessage(_foundClient);
+                    BroadcastMessage(_foundClient, _receivedMessage);
                 }
             }
         }
@@ -114,9 +114,17 @@ public class TCPServer : MonoBehaviour
         }
     }
 
-    public void BroadcastMessage(Client _client)
+    public void BroadcastMessage(Client _client, string _message)
     {
-
+        foreach (var _cli in _clientList)
+        {
+            if (_cli.Tcp != _client.Tcp)
+            {
+                NetworkStream _stream = _cli.Tcp.GetStream();
+                byte[] _data = System.Text.Encoding.ASCII.GetBytes(_message);
+                _stream.Write(_data, 0, _data.Length);
+            }
+        }    
     }
 
     // Get Initials
